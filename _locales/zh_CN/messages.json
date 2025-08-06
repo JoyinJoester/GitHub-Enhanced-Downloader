@@ -1,0 +1,124 @@
+{
+  "extName": {
+    "message": "GitHub 增强下载器",
+    "description": "扩展名称"
+  },
+  "extDescription": {
+    "message": "在 GitHub 仓库页面添加快速下载按钮，支持镜像加速和版本分组",
+    "description": "扩展描述"
+  },
+  "popupTitle": {
+    "message": "GitHub 增强下载器 设置",
+    "description": "弹窗标题"
+  },
+  "downloadReleases": {
+    "message": "下载发行版",
+    "description": "下载按钮文本"
+  },
+  "loading": {
+    "message": "加载中...",
+    "description": "加载状态"
+  },
+  "noReleases": {
+    "message": "此仓库暂无发行版",
+    "description": "无版本时的提示"
+  },
+  "error": {
+    "message": "加载失败",
+    "description": "错误状态"
+  },
+  "version": {
+    "message": "版本",
+    "description": "版本标签"
+  },
+  "versionGroup": {
+    "message": "版本 $VERSION$ 系列",
+    "description": "版本组标题",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "assets": {
+    "message": "文件",
+    "description": "资源文件"
+  },
+  "releaseDate": {
+    "message": "发布时间",
+    "description": "发布日期"
+  },
+  "downloadCount": {
+    "message": "下载次数",
+    "description": "下载计数"
+  },
+  "mirrorSettings": {
+    "message": "🚀 镜像设置",
+    "description": "镜像设置标题"
+  },
+  "enableMirror": {
+    "message": "启用镜像加速",
+    "description": "启用镜像选项"
+  },
+  "presetMirrors": {
+    "message": "📋 预设镜像",
+    "description": "预设镜像标题"
+  },
+  "customMirrors": {
+    "message": "⚙️ 自定义镜像",
+    "description": "自定义镜像标题"
+  },
+  "addCustomMirror": {
+    "message": "添加镜像",
+    "description": "添加按钮"
+  },
+  "mirrorName": {
+    "message": "镜像名称",
+    "description": "镜像名称字段"
+  },
+  "mirrorTemplate": {
+    "message": "镜像模板",
+    "description": "镜像模板字段"
+  },
+  "mirrorExample": {
+    "message": "例如: https://mirror.example.com/${path}",
+    "description": "镜像模板示例"
+  },
+  "testMirror": {
+    "message": "测试规则",
+    "description": "测试按钮"
+  },
+  "deleteMirror": {
+    "message": "删除",
+    "description": "删除按钮"
+  },
+  "save": {
+    "message": "保存",
+    "description": "保存按钮"
+  },
+  "cancel": {
+    "message": "取消",
+    "description": "取消按钮"
+  },
+  "success": {
+    "message": "保存成功",
+    "description": "成功提示"
+  },
+  "testSuccess": {
+    "message": "测试成功",
+    "description": "测试成功"
+  },
+  "testFailed": {
+    "message": "测试失败",
+    "description": "测试失败"
+  },
+  "invalidTemplate": {
+    "message": "无效的模板格式",
+    "description": "模板格式错误"
+  },
+  "templateHelp": {
+    "message": "模板变量：${url} 完整URL，${domain} 域名，${path} 路径",
+    "description": "模板帮助文本"
+  }
+}

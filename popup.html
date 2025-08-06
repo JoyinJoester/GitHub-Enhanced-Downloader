@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="popupTitle"></title>
+    <style>
+        body {
+            width: 400px;
+            min-height: 500px;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f6f8fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2188ff 0%, #0969da 100%);
+            color: white;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background-color: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #d0d7de;
+            font-weight: 600;
+            color: #24292f;
+            font-size: 14px;
+        }
+        
+        .section-content {
+            padding: 16px;
+        }
+        
+        .mirror-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            background-color: #fafbfc;
+        }
+        
+        .mirror-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .mirror-checkbox {
+            margin-right: 8px;
+        }
+        
+        .mirror-name {
+            font-weight: 500;
+            color: #24292f;
+            margin-right: 8px;
+            min-width: 80px;
+        }
+        
+        .mirror-url {
+            font-size: 12px;
+            color: #656d76;
+            font-family: monospace;
+            flex: 1;
+        }
+        
+        .custom-mirror {
+            margin-top: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: #24292f;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #0969da;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #2da44e;
+            border-color: #2da44e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2c974b;
+        }
+        
+        .btn-secondary {
+            background-color: #f6f8fa;
+            color: #24292f;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .btn-danger {
+            background-color: #da3633;
+            border-color: #da3633;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c93c37;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .status-message {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        
+        .status-success {
+            background-color: #d1f7c4;
+            border: 1px solid #74c0fc;
+            color: #0f5132;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #656d76;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        
+        .mirror-example {
+            background-color: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        
+        .mirror-example-title {
+            font-weight: 500;
+            color: #24292f;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .mirror-example-item {
+            font-family: monospace;
+            font-size: 12px;
+            color: #656d76;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 data-i18n="mirrorSettings">🚀 镜像设置</h1>
+    </div>
+    
+    <div class="content">
+        <!-- 预设镜像 -->
+        <div class="section">
+            <div class="section-header">
+                <span data-i18n="presetMirrors">📋 预设镜像</span>
+            </div>
+            <div class="section-content">
+                <div id="preset-mirrors">
+                    <!-- 预设镜像列表将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 自定义镜像 -->
+        <div class="section">
+            <div class="section-header">
+                <span data-i18n="customMirrors">⚙️ 自定义镜像</span>
+            </div>
+            <div class="section-content">
+                <div class="form-group">
+                    <label class="form-label" for="mirror-name" data-i18n="mirrorName">镜像名称</label>
+                    <input type="text" id="mirror-name" class="form-input" data-i18n="mirrorName" placeholder="例如: FastGit">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="mirror-rule">URL规则</label>
+                    <input type="text" id="mirror-rule" class="form-input" data-i18n="mirrorExample" placeholder="例如: https://download.fastgit.org/${url}">
+                    <div class="help-text">
+                        使用 ${url} 作为占位符，表示原始GitHub下载链接<br>
+                        或使用 ${domain}、${path} 等更细粒度的替换
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="add-mirror" class="btn btn-primary" data-i18n="addCustomMirror">添加镜像</button>
+                    <button id="test-mirror" class="btn btn-secondary" data-i18n="testMirror">测试规则</button>
+                </div>
+                
+                <div class="mirror-example">
+                    <div class="mirror-example-title">规则示例：</div>
+                    <div class="mirror-example-item">• 简单替换: https://ghproxy.com/${url}</div>
+                    <div class="mirror-example-item">• 域名替换: ${url}.replace('github.com', 'kkgithub.com')</div>
+                    <div class="mirror-example-item">• 路径处理: https://mirror.site${path}</div>
+                </div>
+                
+                <div id="status-message"></div>
+            </div>
+        </div>
+        
+        <!-- 自定义镜像列表 -->
+        <div class="section">
+            <div class="section-header">
+                🔧 已添加的自定义镜像
+            </div>
+            <div class="section-content">
+                <div id="custom-mirrors">
+                    <!-- 自定义镜像列表将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="btn-group">
+            <button id="save-settings" class="btn btn-primary">保存设置</button>
+            <button id="reset-settings" class="btn btn-danger">重置为默认</button>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

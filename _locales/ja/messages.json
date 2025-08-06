@@ -1,0 +1,84 @@
+{
+  "extName": {
+    "message": "GitHub拡張ダウンローダー",
+    "description": "拡張機能名"
+  },
+  "extDescription": {
+    "message": "GitHubリポジトリページにクイックダウンロードボタンを追加し、ミラー加速とバージョングループ化をサポート",
+    "description": "拡張機能の説明"
+  },
+  "popupTitle": {
+    "message": "GitHub拡張ダウンローダー設定",
+    "description": "ポップアップタイトル"
+  },
+  "downloadReleases": {
+    "message": "リリースをダウンロード",
+    "description": "ダウンロードボタンテキスト"
+  },
+  "loading": {
+    "message": "読み込み中...",
+    "description": "読み込み状態"
+  },
+  "noReleases": {
+    "message": "利用可能なリリースがありません",
+    "description": "リリースなしメッセージ"
+  },
+  "error": {
+    "message": "読み込み失敗",
+    "description": "エラー状態"
+  },
+  "version": {
+    "message": "バージョン",
+    "description": "バージョンラベル"
+  },
+  "versionGroup": {
+    "message": "バージョン $VERSION$ シリーズ",
+    "description": "バージョングループタイトル",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "mirrorSettings": {
+    "message": "🚀 ミラー設定",
+    "description": "ミラー設定タイトル"
+  },
+  "presetMirrors": {
+    "message": "📋 プリセットミラー",
+    "description": "プリセットミラータイトル"
+  },
+  "customMirrors": {
+    "message": "⚙️ カスタムミラー",
+    "description": "カスタムミラータイトル"
+  },
+  "addCustomMirror": {
+    "message": "ミラーを追加",
+    "description": "追加ボタン"
+  },
+  "mirrorName": {
+    "message": "ミラー名",
+    "description": "ミラー名フィールド"
+  },
+  "mirrorExample": {
+    "message": "例: https://mirror.example.com/${path}",
+    "description": "ミラーテンプレート例"
+  },
+  "testMirror": {
+    "message": "テスト",
+    "description": "テストボタン"
+  },
+  "deleteMirror": {
+    "message": "削除",
+    "description": "削除ボタン"
+  },
+  "save": {
+    "message": "保存",
+    "description": "保存ボタン"
+  },
+  "success": {
+    "message": "保存成功",
+    "description": "成功メッセージ"
+  }
+}

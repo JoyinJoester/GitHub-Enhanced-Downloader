@@ -1,0 +1,124 @@
+{
+  "extName": {
+    "message": "GitHub Enhanced Downloader",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Add quick download buttons on GitHub repository pages with mirror acceleration and version grouping",
+    "description": "Extension description"
+  },
+  "popupTitle": {
+    "message": "GitHub Enhanced Downloader Settings",
+    "description": "Popup title"
+  },
+  "downloadReleases": {
+    "message": "Download Releases",
+    "description": "Download button text"
+  },
+  "loading": {
+    "message": "Loading...",
+    "description": "Loading state"
+  },
+  "noReleases": {
+    "message": "No Releases Available",
+    "description": "No releases message"
+  },
+  "error": {
+    "message": "Loading Failed",
+    "description": "Error state"
+  },
+  "version": {
+    "message": "Version",
+    "description": "Version label"
+  },
+  "versionGroup": {
+    "message": "Version $VERSION$ Series",
+    "description": "Version group title",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "assets": {
+    "message": "Assets",
+    "description": "Assets label"
+  },
+  "releaseDate": {
+    "message": "Release Date",
+    "description": "Release date"
+  },
+  "downloadCount": {
+    "message": "Downloads",
+    "description": "Download count"
+  },
+  "mirrorSettings": {
+    "message": "Mirror Settings",
+    "description": "Mirror settings title"
+  },
+  "enableMirror": {
+    "message": "Enable Mirror Acceleration",
+    "description": "Enable mirror option"
+  },
+  "presetMirrors": {
+    "message": "Preset Mirrors",
+    "description": "Preset mirrors title"
+  },
+  "customMirrors": {
+    "message": "Custom Mirrors",
+    "description": "Custom mirrors title"
+  },
+  "addCustomMirror": {
+    "message": "Add Custom Mirror",
+    "description": "Add button"
+  },
+  "mirrorName": {
+    "message": "Mirror Name",
+    "description": "Mirror name field"
+  },
+  "mirrorTemplate": {
+    "message": "Mirror Template",
+    "description": "Mirror template field"
+  },
+  "mirrorExample": {
+    "message": "e.g.: https://mirror.example.com/${path}",
+    "description": "Mirror template example"
+  },
+  "testMirror": {
+    "message": "Test",
+    "description": "Test button"
+  },
+  "deleteMirror": {
+    "message": "Delete",
+    "description": "Delete button"
+  },
+  "save": {
+    "message": "Save",
+    "description": "Save button"
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "Cancel button"
+  },
+  "success": {
+    "message": "Saved Successfully",
+    "description": "Success message"
+  },
+  "testSuccess": {
+    "message": "Test Successful",
+    "description": "Test success"
+  },
+  "testFailed": {
+    "message": "Test Failed",
+    "description": "Test failed"
+  },
+  "invalidTemplate": {
+    "message": "Invalid Template Format",
+    "description": "Template format error"
+  },
+  "templateHelp": {
+    "message": "Template variables: ${url} full URL, ${domain} domain, ${path} path",
+    "description": "Template help text"
+  }
+}
