@@ -19,17 +19,6 @@
 - 🌍 **多语言支持** - 支持中文、英文、日语界面
 - 💾 **云端同步** - 设置自动同步到Chrome账户
 
-## 📸 预览截图
-
-### 主界面展示
-![主界面](https://via.placeholder.com/800x500/2188ff/ffffff?text=GitHub+Enhanced+Downloader+Main+Interface)
-
-### 版本分组功能
-![版本分组](https://via.placeholder.com/800x400/28a745/ffffff?text=Version+Grouping+Feature)
-
-### 镜像设置页面
-![镜像设置](https://via.placeholder.com/600x400/17a2b8/ffffff?text=Mirror+Settings+Panel)
-
 ## 🚀 快速开始
 
 ### 安装方式
@@ -284,3 +273,4 @@ GitHubリポジトリページにクイックダウンロードボタンを追�
 2. Chrome拡張機能ページを開く (`chrome://extensions/`)
 3. デベロッパーモードを有効にする
 4. "パッケージ化されていない拡張機能を読み込む"をクリックしてプロジェクトフォルダを選択
+
