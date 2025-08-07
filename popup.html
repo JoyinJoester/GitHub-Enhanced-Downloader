@@ -1,318 +1,623 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="popupTitle"></title>
-    <style>
-        body {
-            width: 400px;
-            min-height: 500px;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f6f8fa;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2188ff 0%, #0969da 100%);
-            color: white;
-            padding: 16px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        
-        .content {
-            padding: 20px;
-        }
-        
-        .section {
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #d0d7de;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        
-        .section-header {
-            background-color: #f6f8fa;
-            padding: 12px 16px;
-            border-bottom: 1px solid #d0d7de;
-            font-weight: 600;
-            color: #24292f;
-            font-size: 14px;
-        }
-        
-        .section-content {
-            padding: 16px;
-        }
-        
-        .mirror-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            padding: 8px;
-            border: 1px solid #e1e4e8;
-            border-radius: 6px;
-            background-color: #fafbfc;
-        }
-        
-        .mirror-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .mirror-checkbox {
-            margin-right: 8px;
-        }
-        
-        .mirror-name {
-            font-weight: 500;
-            color: #24292f;
-            margin-right: 8px;
-            min-width: 80px;
-        }
-        
-        .mirror-url {
-            font-size: 12px;
-            color: #656d76;
-            font-family: monospace;
-            flex: 1;
-        }
-        
-        .custom-mirror {
-            margin-top: 16px;
-        }
-        
-        .form-group {
-            margin-bottom: 12px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: #24292f;
-            font-size: 14px;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #0969da;
-            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-primary {
-            background-color: #2da44e;
-            border-color: #2da44e;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2c974b;
-        }
-        
-        .btn-secondary {
-            background-color: #f6f8fa;
-            color: #24292f;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #f3f4f6;
-        }
-        
-        .btn-danger {
-            background-color: #da3633;
-            border-color: #da3633;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c93c37;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
-        
-        .status-message {
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-top: 12px;
-        }
-        
-        .status-success {
-            background-color: #d1f7c4;
-            border: 1px solid #74c0fc;
-            color: #0f5132;
-        }
-        
-        .status-error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-        
-        .help-text {
-            font-size: 12px;
-            color: #656d76;
-            margin-top: 4px;
-            line-height: 1.4;
-        }
-        
-        .mirror-example {
-            background-color: #f6f8fa;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 8px;
-        }
-        
-        .mirror-example-title {
-            font-weight: 500;
-            color: #24292f;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-        
-        .mirror-example-item {
-            font-family: monospace;
-            font-size: 12px;
-            color: #656d76;
-            margin-bottom: 4px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Enhanced Downloader</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 400px;
+      min-height: 500px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #24292f;
+      line-height: 1.5;
+    }
+
+    .container {
+      padding: 20px;
+      height: 100%;
+    }
+
+    /* 主视图样式 */
+    #main-view {
+      height: 100%;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #24292f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #656d76;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .settings-btn:hover {
+      background-color: #f6f8fa;
+      color: #24292f;
+    }
+
+    .input-section {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #24292f;
+      margin-bottom: 8px;
+    }
+
+    .repo-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #ffffff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .repo-input:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+    }
+
+    .analyze-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: #1f883d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      margin-bottom: 20px;
+    }
+
+    .analyze-btn:hover:not(:disabled) {
+      background-color: #1a7f37;
+    }
+
+    .analyze-btn:disabled {
+      background-color: #8c959f;
+      cursor: not-allowed;
+    }
+
+    #results-container {
+      min-height: 200px;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 16px;
+      background-color: #f6f8fa;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+
+    /* 设置视图样式 */
+    #settings-view {
+      height: 100%;
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #656d76;
+      font-size: 16px;
+      margin-right: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background-color: #f6f8fa;
+      color: #24292f;
+    }
+
+    .settings-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #24292f;
+    }
+
+    .config-section {
+      margin-bottom: 20px;
+    }
+
+    .config-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #24292f;
+      margin-bottom: 8px;
+    }
+
+    /* 新的设置界面样式 */
+    .setting-section {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .setting-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 20px;
+    }
+
+    .setting-item {
+      margin-bottom: 12px;
+    }
+
+    .setting-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: #24292f;
+      gap: 8px;
+    }
+
+    .setting-checkbox {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d0d7de;
+      border-radius: 3px;
+      background-color: #ffffff;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .setting-checkbox:checked {
+      background-color: #0969da;
+      border-color: #0969da;
+    }
+
+    .setting-checkbox:checked::after {
+      content: "✓";
+      position: absolute;
+      top: -2px;
+      left: 1px;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .setting-description {
+      font-size: 12px;
+      color: #656d76;
+      margin-top: 4px;
+      margin-left: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #24292f;
+      margin: 0;
+    }
+
+    .add-btn {
+      background-color: #1f883d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .add-btn:hover {
+      background-color: #1a7f37;
+    }
+
+    .mirrors-list {
+      margin-bottom: 8px;
+    }
+
+    .mirror-item {
+      background-color: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+
+    .mirror-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .mirror-name {
+      font-weight: 500;
+      color: #24292f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mirror-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mirror-enabled {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #d0d7de;
+      border-radius: 3px;
+      background-color: #ffffff;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .mirror-enabled:checked {
+      background-color: #1f883d;
+      border-color: #1f883d;
+    }
+
+    .mirror-enabled:checked::after {
+      content: "✓";
+      position: absolute;
+      top: -2px;
+      left: 0px;
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #d1242f;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background-color: #fff1f3;
+    }
+
+    .mirror-url {
+      font-size: 12px;
+      color: #656d76;
+      background-color: #ffffff;
+      border: 1px solid #d0d7de;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mirror-url:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.1);
+    }
+
+    .custom-mirror {
+      border-color: #fd8c97;
+      background-color: #fff8f8;
+    }
+
+    .custom-mirror .mirror-name {
+      color: #d1242f;
+    }
+
+    .mirrors-config {
+      width: 100%;
+      height: 250px;
+      padding: 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      background-color: #f6f8fa;
+      resize: vertical;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .mirrors-config:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+      background-color: #ffffff;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: #0969da;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .save-btn:hover:not(:disabled) {
+      background-color: #0860ca;
+    }
+
+    .save-btn:disabled {
+      background-color: #8c959f;
+      cursor: not-allowed;
+    }
+
+    /* 加载状态样式 */
+    .loading {
+      text-align: center;
+      color: #656d76;
+      padding: 40px 20px;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #e1e4e8;
+      border-radius: 50%;
+      border-top-color: #0969da;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 空状态样式 */
+    .empty-state {
+      text-align: center;
+      color: #656d76;
+      padding: 40px 20px;
+      font-size: 14px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    /* 错误状态样式 */
+    .error-state {
+      text-align: center;
+      color: #d1242f;
+      padding: 20px;
+      background-color: #fff1f3;
+      border: 1px solid #fd8c97;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .error-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    /* 成功提示样式 */
+    .success-message {
+      background-color: #dafbe1;
+      border: 1px solid #6fdd8b;
+      color: #1a7f37;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 隐藏类 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* 辅助样式 */
+    .empty-help-text {
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    #settings-view {
+      display: none;
+    }
+
+    /* 结果展示样式 */
+    .result-summary {
+      background-color: #ffffff;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .result-title {
+      font-weight: 600;
+      color: #24292f;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-stats {
+      color: #656d76;
+      font-size: 13px;
+    }
+
+    .open-modal-btn {
+      width: 100%;
+      padding: 8px 16px;
+      background-color: #0969da;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background-color 0.2s ease;
+    }
+
+    .open-modal-btn:hover {
+      background-color: #0860ca;
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1 data-i18n="mirrorSettings">🚀 镜像设置</h1>
+  <div class="container">
+    <!-- 主视图 -->
+    <div id="main-view">
+      <div class="header">
+        <h1 class="title">
+          🚀 GitHub 发行版分析器
+        </h1>
+        <button id="settings-btn" class="settings-btn" title="设置">
+          ⚙️
+        </button>
+      </div>
+
+      <div class="input-section">
+        <label for="repo-input" class="input-label">
+          GitHub 仓库地址
+        </label>
+        <input 
+          type="text" 
+          id="repo-input" 
+          class="repo-input"
+          placeholder="例如：microsoft/vscode"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+
+      <button id="analyze-btn" class="analyze-btn">
+        开始分析
+      </button>
+
+      <div id="results-container">
+        <div class="empty-state">
+          <div class="empty-icon">📦</div>
+          <div>输入 GitHub 仓库地址开始分析</div>
+          <div class="empty-help-text">
+            支持格式：owner/repo 或完整 URL
+          </div>
+        </div>
+      </div>
     </div>
-    
-    <div class="content">
-        <!-- 自动重定向设置 -->
-        <div class="section">
-            <div class="section-header">
-                🔄 自动重定向设置
-            </div>
-            <div class="section-content">
-                <div class="mirror-item">
-                    <input type="checkbox" id="auto-redirect-enabled" class="mirror-checkbox">
-                    <span class="mirror-name">启用自动重定向</span>
-                    <span class="mirror-url">当GitHub无法访问时自动跳转到镜像站</span>
-                </div>
-                
-                <div class="form-group" style="margin-top: 12px;">
-                    <label class="form-label" for="preferred-mirror">首选镜像站</label>
-                    <select id="preferred-mirror" class="form-input">
-                        <option value="KKGitHub">KKGitHub (kkgithub.com)</option>
-                        <option value="BGitHub">BGitHub (bgithub.xyz)</option>
-                        <option value="GitFun">GitFun (github.ur1.fun)</option>
-                    </select>
-                    <div class="help-text">
-                        选择当GitHub无法访问时优先使用的镜像站点
-                    </div>
-                </div>
-                
-                <div id="network-status" class="status-message" style="display: none;">
-                    <span id="network-status-text"></span>
-                </div>
-            </div>
+
+    <!-- 设置视图 -->
+    <div id="settings-view" class="hidden">
+      <div class="settings-header">
+        <button id="back-btn" class="back-btn" title="返回">
+          ←
+        </button>
+        <h2 class="settings-title">镜像设置</h2>
+      </div>
+
+      <!-- 自动重定向设置 -->
+      <div class="setting-section">
+        <div class="setting-item">
+          <label class="setting-label">
+            <input type="checkbox" id="auto-redirect-enabled" class="setting-checkbox">
+            <span class="checkmark"></span>
+            启用自动重定向
+          </label>
+          <div class="setting-description">
+            当 GitHub 无法访问时自动跳转到镜像站
+          </div>
         </div>
-        
-        <!-- 预设镜像 -->
-        <div class="section">
-            <div class="section-header">
-                <span data-i18n="presetMirrors">📋 预设镜像</span>
-            </div>
-            <div class="section-content">
-                <div id="preset-mirrors">
-                    <!-- 预设镜像列表将在这里动态生成 -->
-                </div>
-            </div>
+      </div>
+
+      <!-- 镜像列表 -->
+      <div class="setting-section">
+        <div class="section-header">
+          <h3 class="section-title">镜像站点</h3>
+          <button id="add-mirror-btn" class="add-btn" title="添加自定义镜像">
+            ➕ 添加
+          </button>
         </div>
-        
-        <!-- 自定义镜像 -->
-        <div class="section">
-            <div class="section-header">
-                <span data-i18n="customMirrors">⚙️ 自定义镜像</span>
-            </div>
-            <div class="section-content">
-                <div class="form-group">
-                    <label class="form-label" for="mirror-name" data-i18n="mirrorName">镜像名称</label>
-                    <input type="text" id="mirror-name" class="form-input" data-i18n="mirrorName" placeholder="例如: FastGit">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="mirror-rule">URL规则</label>
-                    <input type="text" id="mirror-rule" class="form-input" data-i18n="mirrorExample" placeholder="例如: https://download.fastgit.org/${url}">
-                    <div class="help-text">
-                        使用 ${url} 作为占位符，表示原始GitHub下载链接<br>
-                        或使用 ${domain}、${path} 等更细粒度的替换
-                    </div>
-                </div>
-                
-                <div class="btn-group">
-                    <button id="add-mirror" class="btn btn-primary" data-i18n="addCustomMirror">添加镜像</button>
-                    <button id="test-mirror" class="btn btn-secondary" data-i18n="testMirror">测试规则</button>
-                </div>
-                
-                <div class="mirror-example">
-                    <div class="mirror-example-title">规则示例：</div>
-                    <div class="mirror-example-item">• 简单替换: https://ghproxy.com/${url}</div>
-                    <div class="mirror-example-item">• 域名替换: ${url}.replace('github.com', 'kkgithub.com')</div>
-                    <div class="mirror-example-item">• 路径处理: https://mirror.site${path}</div>
-                </div>
-                
-                <div id="status-message"></div>
-            </div>
+        <div id="mirrors-list" class="mirrors-list">
+          <!-- 镜像项目会通过 JavaScript 动态生成 -->
         </div>
-        
-        <!-- 自定义镜像列表 -->
-        <div class="section">
-            <div class="section-header">
-                🔧 已添加的自定义镜像
-            </div>
-            <div class="section-content">
-                <div id="custom-mirrors">
-                    <!-- 自定义镜像列表将在这里动态生成 -->
-                </div>
-            </div>
-        </div>
-        
-        <!-- 操作按钮 -->
-        <div class="btn-group">
-            <button id="save-settings" class="btn btn-primary">保存设置</button>
-            <button id="reset-settings" class="btn btn-danger">重置为默认</button>
-        </div>
+      </div>
+
+      <!-- 保存按钮 -->
+      <button id="save-settings-btn" class="save-btn">
+        保存设置
+      </button>
     </div>
-    
-    <script src="popup.js"></script>
+  </div>
+
+  <script src="popup.js"></script>
 </body>
 </html>

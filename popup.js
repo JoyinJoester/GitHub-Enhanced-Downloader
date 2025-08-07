@@ -1,458 +1,707 @@
-// GitHub Enhanced Downloader - Popup Script
+/**
+ * GitHub Enhanced Downloader - Popup Script
+ * 实现弹窗界面的交互逻辑
+ */
 
-// 国际化函数
-function initializeI18n() {
-  // 获取所有带有 data-i18n 属性的元素
-  const i18nElements = document.querySelectorAll('[data-i18n]');
-  
-  i18nElements.forEach(element => {
-    const key = element.getAttribute('data-i18n');
-    const message = chrome.i18n.getMessage(key);
-    
-    if (message) {
-      if (element.tagName === 'INPUT' && element.type === 'text') {
-        element.placeholder = message;
-      } else {
-        element.textContent = message;
-      }
+class PopupManager {
+  constructor() {
+    this.elements = {};
+    this.isLoading = false;
+    this.init();
+  }
+
+  /**
+   * 初始化管理器
+   */
+  init() {
+    // 等待DOM加载完成
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.bindEvents());
+    } else {
+      this.bindEvents();
     }
-  });
-  
-  // 设置文档标题
-  document.title = chrome.i18n.getMessage('popupTitle');
-}
-
-// 默认镜像配置
-const DEFAULT_MIRRORS = [
-  {
-    name: 'GitHub官方',
-    rule: '${url}',
-    enabled: true,
-    type: 'preset',
-    description: '原始GitHub下载链接'
-  },
-  {
-    name: 'BGitHub',
-    rule: 'https://bgithub.xyz${url.replace("https://github.com", "")}',
-    enabled: false,
-    type: 'preset',
-    description: 'BGitHub镜像加速服务'
-  },
-  {
-    name: 'KKGitHub',
-    rule: 'https://kkgithub.com${url.replace("https://github.com", "")}',
-    enabled: false,
-    type: 'preset',
-    description: 'KKGitHub镜像加速服务'
-  },
-  {
-    name: 'GitFun',
-    rule: 'https://github.ur1.fun${url.replace("https://github.com", "")}',
-    enabled: false,
-    type: 'preset',
-    description: 'GitFun镜像加速服务'
   }
-];
 
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', async () => {
-  // 初始化国际化
-  initializeI18n();
-  await loadSettings();
-  bindEvents();
-});
-
-// 加载设置
-async function loadSettings() {
-  try {
-    const result = await chrome.storage.sync.get(['mirrorSettings', 'redirectSettings']);
-    const settings = result.mirrorSettings || {
-      presetMirrors: DEFAULT_MIRRORS,
-      customMirrors: []
-    };
-    
-    const redirectSettings = result.redirectSettings || {
-      enabled: true,
-      preferredMirror: 'KKGitHub',
-      autoRedirect: true
-    };
-    
-    renderPresetMirrors(settings.presetMirrors);
-    renderCustomMirrors(settings.customMirrors);
-    renderRedirectSettings(redirectSettings);
-    
-    // 加载网络状态
-    await loadNetworkStatus();
-    
-    console.log('设置加载完成:', { settings, redirectSettings });
-  } catch (error) {
-    console.error('加载设置失败:', error);
-    showMessage('加载设置失败: ' + error.message, 'error');
-  }
-}
-
-// 渲染预设镜像
-function renderPresetMirrors(presetMirrors) {
-  const container = document.getElementById('preset-mirrors');
-  container.innerHTML = '';
-  
-  presetMirrors.forEach((mirror, index) => {
-    const item = document.createElement('div');
-    item.className = 'mirror-item';
-    
-    item.innerHTML = `
-      <input type="checkbox" 
-             class="mirror-checkbox" 
-             id="preset-${index}" 
-             ${mirror.enabled ? 'checked' : ''}>
-      <label for="preset-${index}" class="mirror-name">${mirror.name}</label>
-      <div class="mirror-url">${mirror.description}</div>
-    `;
-    
-    const checkbox = item.querySelector('.mirror-checkbox');
-    checkbox.addEventListener('change', (e) => {
-      updatePresetMirrorStatus(index, e.target.checked);
-    });
-    
-    container.appendChild(item);
-  });
-}
-
-// 渲染自定义镜像
-function renderCustomMirrors(customMirrors) {
-  const container = document.getElementById('custom-mirrors');
-  container.innerHTML = '';
-  
-  if (customMirrors.length === 0) {
-    container.innerHTML = '<div style="color: #656d76; text-align: center; padding: 20px;">暂无自定义镜像</div>';
-    return;
-  }
-  
-  customMirrors.forEach((mirror, index) => {
-    const item = document.createElement('div');
-    item.className = 'mirror-item';
-    
-    item.innerHTML = `
-      <input type="checkbox" 
-             class="mirror-checkbox" 
-             id="custom-${index}" 
-             ${mirror.enabled ? 'checked' : ''}>
-      <label for="custom-${index}" class="mirror-name">${mirror.name}</label>
-      <div class="mirror-url">${mirror.rule}</div>
-      <button class="btn btn-danger" style="margin-left: 8px; padding: 4px 8px; font-size: 12px;" 
-              onclick="removeCustomMirror(${index})">删除</button>
-    `;
-    
-    const checkbox = item.querySelector('.mirror-checkbox');
-    checkbox.addEventListener('change', (e) => {
-      updateCustomMirrorStatus(index, e.target.checked);
-    });
-    
-    container.appendChild(item);
-  });
-}
-
-// 渲染重定向设置
-function renderRedirectSettings(redirectSettings) {
-  const autoRedirectCheckbox = document.getElementById('auto-redirect-enabled');
-  const preferredMirrorSelect = document.getElementById('preferred-mirror');
-  
-  autoRedirectCheckbox.checked = redirectSettings.enabled || false;
-  preferredMirrorSelect.value = redirectSettings.preferredMirror || 'KKGitHub';
-  
-  // 绑定事件
-  autoRedirectCheckbox.addEventListener('change', async (e) => {
-    const enabled = e.target.checked;
-    await updateRedirectSettings({ enabled });
-  });
-  
-  preferredMirrorSelect.addEventListener('change', async (e) => {
-    const preferredMirror = e.target.value;
-    await updateRedirectSettings({ preferredMirror });
-  });
-}
-
-// 加载网络状态
-async function loadNetworkStatus() {
-  try {
-    const result = await chrome.storage.local.get(['githubAccessible', 'lastCheckTime']);
-    const statusElement = document.getElementById('network-status');
-    const statusText = document.getElementById('network-status-text');
-    
-    if (result.githubAccessible !== undefined) {
-      const accessible = result.githubAccessible;
-      const lastCheck = result.lastCheckTime ? new Date(result.lastCheckTime).toLocaleTimeString() : '未知';
+  /**
+   * 绑定事件监听器
+   */
+  bindEvents() {
+    // 获取DOM元素
+    this.elements = {
+      // 主视图元素
+      mainView: document.getElementById('main-view'),
+      settingsView: document.getElementById('settings-view'),
+      repoInput: document.getElementById('repo-input'),
+      analyzeBtn: document.getElementById('analyze-btn'),
+      resultsContainer: document.getElementById('results-container'),
       
-      statusElement.style.display = 'block';
-      if (accessible) {
-        statusElement.className = 'status-message status-success';
-        statusText.textContent = `✅ GitHub可正常访问 (最后检测: ${lastCheck})`;
-      } else {
-        statusElement.className = 'status-message status-error';
-        statusText.textContent = `❌ GitHub无法访问，已启用镜像重定向 (最后检测: ${lastCheck})`;
-      }
-    }
-  } catch (error) {
-    console.error('加载网络状态失败:', error);
-  }
-}
-
-// 更新重定向设置
-async function updateRedirectSettings(updates) {
-  try {
-    const result = await chrome.storage.sync.get(['redirectSettings']);
-    const currentSettings = result.redirectSettings || {
-      enabled: true,
-      preferredMirror: 'KKGitHub',
-      autoRedirect: true
+      // 按钮元素
+      settingsBtn: document.getElementById('settings-btn'),
+      backBtn: document.getElementById('back-btn'),
+      saveSettingsBtn: document.getElementById('save-settings-btn')
     };
-    
-    const newSettings = { ...currentSettings, ...updates };
-    await chrome.storage.sync.set({ redirectSettings: newSettings });
-    
-    console.log('重定向设置已更新:', newSettings);
-  } catch (error) {
-    console.error('更新重定向设置失败:', error);
-    showMessage('保存设置失败: ' + error.message, 'error');
-  }
-}
 
-// 绑定事件
-function bindEvents() {
-  // 添加镜像
-  document.getElementById('add-mirror').addEventListener('click', addCustomMirror);
-  
-  // 测试规则
-  document.getElementById('test-mirror').addEventListener('click', testMirrorRule);
-  
-  // 保存设置
-  document.getElementById('save-settings').addEventListener('click', saveSettings);
-  
-  // 重置设置
-  document.getElementById('reset-settings').addEventListener('click', resetSettings);
-  
-  // 回车键添加镜像
-  document.getElementById('mirror-rule').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      addCustomMirror();
-    }
-  });
-}
+    // 绑定事件
+    this.elements.analyzeBtn.addEventListener('click', () => this.handleAnalyze());
+    this.elements.settingsBtn.addEventListener('click', () => this.showSettingsView());
+    this.elements.backBtn.addEventListener('click', () => this.showMainView());
+    this.elements.saveSettingsBtn.addEventListener('click', () => this.handleSaveSettings());
+    
+    // 回车键触发分析
+    this.elements.repoInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !this.isLoading) {
+        this.handleAnalyze();
+      }
+    });
 
-// 更新预设镜像状态
-async function updatePresetMirrorStatus(index, enabled) {
-  try {
-    const result = await chrome.storage.sync.get(['mirrorSettings']);
-    const settings = result.mirrorSettings || { presetMirrors: DEFAULT_MIRRORS, customMirrors: [] };
-    
-    settings.presetMirrors[index].enabled = enabled;
-    
-    await chrome.storage.sync.set({ mirrorSettings: settings });
-    console.log(`预设镜像 ${settings.presetMirrors[index].name} 状态更新为:`, enabled);
-  } catch (error) {
-    console.error('更新预设镜像状态失败:', error);
-    showMessage('更新失败: ' + error.message, 'error');
+    console.log('PopupManager 初始化完成');
   }
-}
 
-// 更新自定义镜像状态
-async function updateCustomMirrorStatus(index, enabled) {
-  try {
-    const result = await chrome.storage.sync.get(['mirrorSettings']);
-    const settings = result.mirrorSettings || { presetMirrors: DEFAULT_MIRRORS, customMirrors: [] };
-    
-    settings.customMirrors[index].enabled = enabled;
-    
-    await chrome.storage.sync.set({ mirrorSettings: settings });
-    console.log(`自定义镜像 ${settings.customMirrors[index].name} 状态更新为:`, enabled);
-  } catch (error) {
-    console.error('更新自定义镜像状态失败:', error);
-    showMessage('更新失败: ' + error.message, 'error');
+  /**
+   * 显示主视图
+   */
+  showMainView() {
+    this.elements.mainView.classList.remove('hidden');
+    this.elements.settingsView.classList.add('hidden');
+    this.elements.settingsView.style.display = 'none';
+    this.elements.mainView.style.display = 'block';
   }
-}
 
-// 添加自定义镜像
-async function addCustomMirror() {
-  const nameInput = document.getElementById('mirror-name');
-  const ruleInput = document.getElementById('mirror-rule');
-  
-  const name = nameInput.value.trim();
-  const rule = ruleInput.value.trim();
-  
-  if (!name || !rule) {
-    showMessage('请填写镜像名称和URL规则', 'error');
-    return;
-  }
-  
-  // 验证规则格式
-  if (!rule.includes('${url}') && !rule.includes('${domain}') && !rule.includes('${path}')) {
-    showMessage('URL规则必须包含 ${url}、${domain} 或 ${path} 占位符', 'error');
-    return;
-  }
-  
-  try {
-    const result = await chrome.storage.sync.get(['mirrorSettings']);
-    const settings = result.mirrorSettings || { presetMirrors: DEFAULT_MIRRORS, customMirrors: [] };
+  /**
+   * 显示设置视图
+   */
+  async showSettingsView() {
+    this.elements.mainView.classList.add('hidden');
+    this.elements.settingsView.classList.remove('hidden');
+    this.elements.mainView.style.display = 'none';
+    this.elements.settingsView.style.display = 'block';
     
-    // 检查是否已存在同名镜像
-    const exists = settings.customMirrors.some(mirror => mirror.name === name);
-    if (exists) {
-      showMessage('已存在同名镜像，请使用不同的名称', 'error');
+    // 加载并渲染当前配置
+    await this.loadAndRenderSettings();
+  }
+
+  /**
+   * 处理分析按钮点击
+   */
+  async handleAnalyze() {
+    if (this.isLoading) return;
+
+    const repoInput = this.elements.repoInput.value.trim();
+    if (!repoInput) {
+      this.showError('请输入 GitHub 仓库地址');
       return;
     }
+
+    // 解析仓库信息
+    const repoInfo = this.parseRepoInput(repoInput);
+    if (!repoInfo) {
+      this.showError('仓库地址格式不正确，请使用 owner/repo 格式');
+      return;
+    }
+
+    this.setLoading(true);
+    this.showLoading();
+
+    try {
+      // 向 background.js 发送消息
+      const response = await this.sendMessage({
+        type: 'FETCH_RELEASES',
+        owner: repoInfo.owner,
+        repo: repoInfo.repo
+      });
+
+      if (response.success) {
+        this.renderResults(response);
+      } else {
+        this.showError(response.error || '获取发行版信息失败');
+      }
+    } catch (error) {
+      console.error('分析失败:', error);
+      this.showError('分析过程中发生错误: ' + error.message);
+    } finally {
+      this.setLoading(false);
+    }
+  }
+
+  /**
+   * 解析仓库输入
+   */
+  parseRepoInput(input) {
+    // 清理输入
+    input = input.trim();
+    
+    // 支持的格式:
+    // 1. owner/repo
+    // 2. https://github.com/owner/repo
+    // 3. github.com/owner/repo
+    
+    let match;
+    
+    // 完整URL格式
+    match = input.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/]+)\/([^\/\s]+)/);
+    if (match) {
+      return {
+        owner: match[1],
+        repo: match[2].replace(/\.git$/, '') // 移除.git后缀
+      };
+    }
+    
+    // 简单格式 owner/repo
+    match = input.match(/^([^\/\s]+)\/([^\/\s]+)$/);
+    if (match) {
+      return {
+        owner: match[1],
+        repo: match[2]
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * 发送消息给 background.js
+   */
+  sendMessage(message) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
+  /**
+   * 设置加载状态
+   */
+  setLoading(loading) {
+    this.isLoading = loading;
+    this.elements.analyzeBtn.disabled = loading;
+    this.elements.analyzeBtn.textContent = loading ? '分析中...' : '开始分析';
+  }
+
+  /**
+   * 显示加载中状态
+   */
+  showLoading() {
+    this.elements.resultsContainer.innerHTML = `
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        正在分析仓库发行版...
+      </div>
+    `;
+  }
+
+  /**
+   * 显示错误信息
+   */
+  showError(message) {
+    this.elements.resultsContainer.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">❌</div>
+        <div>${message}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * 渲染分析结果
+   */
+  renderResults(response) {
+    const { data, totalCount, groupCount, source } = response;
+    
+    if (!data || data.length === 0) {
+      this.elements.resultsContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div>该仓库没有发行版</div>
+        </div>
+      `;
+      return;
+    }
+
+    // 创建结果摘要
+    let html = `
+      <div class="result-summary">
+        <div class="result-title">
+          📊 分析结果
+        </div>
+        <div class="result-stats">
+          总计 ${totalCount} 个发行版，分为 ${groupCount} 个版本组<br>
+          数据来源: ${source}
+        </div>
+        <button class="open-modal-btn" onclick="popupManager.openDownloadModal(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+          打开下载界面
+        </button>
+      </div>
+    `;
+
+    // 创建版本组列表（前3个）
+    const maxGroups = Math.min(3, data.length);
+    for (let i = 0; i < maxGroups; i++) {
+      const group = data[i];
+      const versionName = group.version || `版本组 ${i + 1}`;
+      const releaseCount = group.releases.length;
+      
+      html += `
+        <details class="version-group" ${i === 0 ? 'open' : ''}>
+          <summary class="version-summary">
+            <span class="version-name">${versionName}</span>
+            <span class="release-count">${releaseCount} 个发行版</span>
+          </summary>
+          <div class="releases-list">
+      `;
+      
+      // 显示该组的前3个发行版
+      const maxReleases = Math.min(3, group.releases.length);
+      for (let j = 0; j < maxReleases; j++) {
+        const release = group.releases[j];
+        html += `
+          <div class="release-item">
+            <div class="release-name">${release.tag_name}</div>
+            <div class="release-date">${new Date(release.published_at).toLocaleDateString('zh-CN')}</div>
+            <div class="asset-count">${release.assets.length} 个文件</div>
+          </div>
+        `;
+      }
+      
+      if (group.releases.length > 3) {
+        html += `<div class="more-releases">还有 ${group.releases.length - 3} 个发行版...</div>`;
+      }
+      
+      html += '</div></details>';
+    }
+
+    if (data.length > 3) {
+      html += `<div class="more-groups">还有 ${data.length - 3} 个版本组...</div>`;
+    }
+
+    // 添加样式
+    html += `
+      <style>
+        .version-group {
+          border: 1px solid #d0d7de;
+          border-radius: 6px;
+          margin-bottom: 8px;
+        }
+        
+        .version-summary {
+          padding: 12px 16px;
+          background-color: #f6f8fa;
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 500;
+        }
+        
+        .version-summary:hover {
+          background-color: #f1f3f4;
+        }
+        
+        .version-name {
+          color: #24292f;
+        }
+        
+        .release-count {
+          color: #656d76;
+          font-size: 13px;
+        }
+        
+        .releases-list {
+          padding: 12px 16px;
+          background-color: #ffffff;
+        }
+        
+        .release-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-bottom: 1px solid #f1f3f4;
+          font-size: 13px;
+        }
+        
+        .release-item:last-child {
+          border-bottom: none;
+        }
+        
+        .release-name {
+          font-weight: 500;
+          color: #24292f;
+        }
+        
+        .release-date {
+          color: #656d76;
+        }
+        
+        .asset-count {
+          color: #0969da;
+          font-size: 12px;
+        }
+        
+        .more-releases, .more-groups {
+          text-align: center;
+          color: #656d76;
+          font-style: italic;
+          padding: 8px;
+          font-size: 13px;
+        }
+      </style>
+    `;
+
+    this.elements.resultsContainer.innerHTML = html;
+  }
+
+  /**
+   * 打开下载模态框
+   */
+  openDownloadModal(data) {
+    // 注入内容脚本到当前标签页
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ['content.js']
+        }, () => {
+          // 发送数据到内容脚本
+          chrome.tabs.sendMessage(tabs[0].id, {
+            type: 'SHOW_DOWNLOAD_MODAL',
+            data: data
+          });
+        });
+      }
+    });
+  }
+
+  /**
+   * 加载并渲染设置界面
+   */
+  async loadAndRenderSettings() {
+    try {
+      const result = await new Promise((resolve) => {
+        chrome.storage.local.get(['mirrorConfig'], resolve);
+      });
+
+      let config = result.mirrorConfig;
+      
+      // 如果没有配置，使用默认配置
+      if (!config) {
+        config = this.getDefaultMirrorConfig();
+      }
+
+      // 渲染自动重定向设置
+      this.renderAutoRedirectSetting(config);
+      
+      // 渲染镜像列表
+      this.renderMirrorsList(config);
+      
+      // 绑定添加镜像按钮事件
+      document.getElementById('add-mirror-btn').addEventListener('click', () => {
+        this.addCustomMirror();
+      });
+
+    } catch (error) {
+      console.error('加载设置失败:', error);
+      this.showSettingsError('加载设置时发生错误');
+    }
+  }
+
+  /**
+   * 获取默认镜像配置
+   */
+  getDefaultMirrorConfig() {
+    return {
+      enableMirrors: true,
+      autoRedirect: {
+        enabled: false,
+        preferredMirror: "KKGitHub"
+      },
+      mirrorRules: [
+        {
+          name: "KKGitHub",
+          downloadUrl: "https://kkgithub.com/{owner}/{repo}/releases/download/{tag}/{filename}",
+          enabled: true,
+          priority: 1,
+          isCustom: false
+        },
+        {
+          name: "BGitHub", 
+          downloadUrl: "https://bgithub.xyz/{owner}/{repo}/releases/download/{tag}/{filename}",
+          enabled: true,
+          priority: 2,
+          isCustom: false
+        },
+        {
+          name: "GitFun",
+          downloadUrl: "https://github.ur1.fun/{owner}/{repo}/releases/download/{tag}/{filename}",
+          enabled: true,
+          priority: 3,
+          isCustom: false
+        }
+      ]
+    };
+  }
+
+  /**
+   * 渲染自动重定向设置
+   */
+  renderAutoRedirectSetting(config) {
+    const autoRedirectCheckbox = document.getElementById('auto-redirect-enabled');
+    autoRedirectCheckbox.checked = config.autoRedirect && config.autoRedirect.enabled;
+  }
+
+  /**
+   * 渲染镜像列表
+   */
+  renderMirrorsList(config) {
+    const mirrorsList = document.getElementById('mirrors-list');
+    mirrorsList.innerHTML = '';
+
+    config.mirrorRules.forEach((mirror, index) => {
+      const mirrorItem = this.createMirrorItem(mirror, index);
+      mirrorsList.appendChild(mirrorItem);
+    });
+  }
+
+  /**
+   * 创建镜像项目元素
+   */
+  createMirrorItem(mirror, index) {
+    const item = document.createElement('div');
+    item.className = `mirror-item ${mirror.isCustom ? 'custom-mirror' : ''}`;
+    item.dataset.index = index;
+
+    item.innerHTML = `
+      <div class="mirror-header">
+        <div class="mirror-name">
+          ${mirror.isCustom ? '🔧' : '🌐'} ${mirror.name}
+        </div>
+        <div class="mirror-controls">
+          <input type="checkbox" class="mirror-enabled" ${mirror.enabled ? 'checked' : ''}>
+          ${mirror.isCustom ? '<button class="delete-btn" title="删除">🗑️</button>' : ''}
+        </div>
+      </div>
+      <input type="text" class="mirror-url" value="${mirror.downloadUrl}" ${mirror.isCustom ? '' : 'readonly'} placeholder="镜像 URL 模板">
+    `;
+
+    // 绑定事件
+    const enabledCheckbox = item.querySelector('.mirror-enabled');
+    enabledCheckbox.addEventListener('change', () => {
+      mirror.enabled = enabledCheckbox.checked;
+    });
+
+    const urlInput = item.querySelector('.mirror-url');
+    if (mirror.isCustom) {
+      urlInput.addEventListener('input', () => {
+        mirror.downloadUrl = urlInput.value;
+      });
+    }
+
+    const deleteBtn = item.querySelector('.delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        this.deleteMirror(index);
+      });
+    }
+
+    return item;
+  }
+
+  /**
+   * 添加自定义镜像
+   */
+  addCustomMirror() {
+    const config = this.getCurrentConfig();
     
     const newMirror = {
-      name: name,
-      rule: rule,
+      name: `自定义镜像 ${config.mirrorRules.filter(m => m.isCustom).length + 1}`,
+      downloadUrl: "https://your-mirror.com/{owner}/{repo}/releases/download/{tag}/{filename}",
       enabled: true,
-      type: 'custom'
+      priority: config.mirrorRules.length + 1,
+      isCustom: true
     };
-    
-    settings.customMirrors.push(newMirror);
-    
-    await chrome.storage.sync.set({ mirrorSettings: settings });
-    
-    // 清空输入框
-    nameInput.value = '';
-    ruleInput.value = '';
-    
-    // 重新渲染
-    renderCustomMirrors(settings.customMirrors);
-    
-    showMessage('自定义镜像添加成功', 'success');
-    
-  } catch (error) {
-    console.error('添加自定义镜像失败:', error);
-    showMessage('添加失败: ' + error.message, 'error');
-  }
-}
 
-// 删除自定义镜像
-async function removeCustomMirror(index) {
-  if (!confirm('确定要删除这个自定义镜像吗？')) {
-    return;
+    config.mirrorRules.push(newMirror);
+    this.renderMirrorsList(config);
   }
-  
-  try {
-    const result = await chrome.storage.sync.get(['mirrorSettings']);
-    const settings = result.mirrorSettings || { presetMirrors: DEFAULT_MIRRORS, customMirrors: [] };
-    
-    settings.customMirrors.splice(index, 1);
-    
-    await chrome.storage.sync.set({ mirrorSettings: settings });
-    
-    renderCustomMirrors(settings.customMirrors);
-    
-    showMessage('自定义镜像删除成功', 'success');
-    
-  } catch (error) {
-    console.error('删除自定义镜像失败:', error);
-    showMessage('删除失败: ' + error.message, 'error');
-  }
-}
 
-// 测试镜像规则
-function testMirrorRule() {
-  const rule = document.getElementById('mirror-rule').value.trim();
-  
-  if (!rule) {
-    showMessage('请输入URL规则', 'error');
-    return;
-  }
-  
-  // 测试URL
-  const testUrl = 'https://github.com/microsoft/vscode/releases/download/1.85.0/VSCode-win32-x64-1.85.0.zip';
-  
-  try {
-    let result;
-    
-    if (rule.includes('${url}')) {
-      result = rule.replace(/\$\{url\}/g, testUrl);
-    } else if (rule.includes('.replace(')) {
-      // 处理JavaScript表达式
-      const urlVar = testUrl;
-      result = eval(rule.replace(/\$\{url\}/g, 'urlVar'));
-    } else {
-      // 处理其他占位符
-      const url = new URL(testUrl);
-      result = rule
-        .replace(/\$\{domain\}/g, url.hostname)
-        .replace(/\$\{path\}/g, url.pathname)
-        .replace(/\$\{protocol\}/g, url.protocol);
+  /**
+   * 删除镜像
+   */
+  deleteMirror(index) {
+    if (confirm('确定要删除这个镜像吗？')) {
+      const config = this.getCurrentConfig();
+      config.mirrorRules.splice(index, 1);
+      this.renderMirrorsList(config);
     }
-    
-    showMessage(`测试结果: ${result}`, 'success');
-    
-  } catch (error) {
-    showMessage(`规则测试失败: ${error.message}`, 'error');
   }
-}
 
-// 保存设置
-async function saveSettings() {
-  try {
-    const result = await chrome.storage.sync.get(['mirrorSettings']);
-    const settings = result.mirrorSettings;
-    
-    if (!settings) {
-      showMessage('没有设置需要保存', 'error');
-      return;
-    }
-    
-    // 重新保存确保数据一致性
-    await chrome.storage.sync.set({ mirrorSettings: settings });
-    
-    showMessage('设置保存成功', 'success');
-    
-    // 通知background script重新加载镜像配置
-    chrome.runtime.sendMessage({ type: 'RELOAD_MIRRORS' });
-    
-  } catch (error) {
-    console.error('保存设置失败:', error);
-    showMessage('保存失败: ' + error.message, 'error');
-  }
-}
-
-// 重置设置
-async function resetSettings() {
-  if (!confirm('确定要重置为默认设置吗？这将删除所有自定义镜像。')) {
-    return;
-  }
-  
-  try {
-    const defaultSettings = {
-      presetMirrors: DEFAULT_MIRRORS,
-      customMirrors: []
+  /**
+   * 获取当前配置
+   */
+  getCurrentConfig() {
+    const config = {
+      enableMirrors: true,
+      autoRedirect: {
+        enabled: document.getElementById('auto-redirect-enabled').checked,
+        preferredMirror: "KKGitHub"
+      },
+      mirrorRules: []
     };
-    
-    await chrome.storage.sync.set({ mirrorSettings: defaultSettings });
-    
-    renderPresetMirrors(defaultSettings.presetMirrors);
-    renderCustomMirrors(defaultSettings.customMirrors);
-    
-    showMessage('设置已重置为默认', 'success');
-    
-    // 通知background script重新加载镜像配置
-    chrome.runtime.sendMessage({ type: 'RELOAD_MIRRORS' });
-    
-  } catch (error) {
-    console.error('重置设置失败:', error);
-    showMessage('重置失败: ' + error.message, 'error');
+
+    // 从界面收集镜像配置
+    const mirrorItems = document.querySelectorAll('.mirror-item');
+    mirrorItems.forEach((item, index) => {
+      const nameElement = item.querySelector('.mirror-name');
+      const enabledCheckbox = item.querySelector('.mirror-enabled');
+      const urlInput = item.querySelector('.mirror-url');
+      const isCustom = item.classList.contains('custom-mirror');
+
+      // 提取镜像名称（去掉表情符号）
+      const name = nameElement.textContent.replace(/^[🌐🔧]\s*/, '');
+
+      config.mirrorRules.push({
+        name: name,
+        downloadUrl: urlInput.value,
+        enabled: enabledCheckbox.checked,
+        priority: index + 1,
+        isCustom: isCustom
+      });
+    });
+
+    return config;
+  }
+
+  /**
+   * 保存设置
+   */
+  async handleSaveSettings() {
+    try {
+      const config = this.getCurrentConfig();
+      
+      // 验证配置
+      if (!this.validateConfig(config)) {
+        return;
+      }
+
+      // 保存到 chrome.storage.local
+      await new Promise((resolve, reject) => {
+        chrome.storage.local.set({ mirrorConfig: config }, () => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      // 同时通知 background.js 更新配置
+      await this.sendMessage({
+        type: 'updateMirrorConfig',
+        config: config
+      });
+
+      this.showSettingsSuccess('设置保存成功！');
+      
+      // 1.5秒后返回主视图
+      setTimeout(() => {
+        this.showMainView();
+      }, 1500);
+
+    } catch (error) {
+      console.error('保存设置失败:', error);
+      this.showSettingsError('保存失败: ' + error.message);
+    }
+  }
+
+  /**
+   * 验证配置
+   */
+  validateConfig(config) {
+    // 检查是否至少有一个启用的镜像
+    const enabledMirrors = config.mirrorRules.filter(m => m.enabled);
+    if (enabledMirrors.length === 0) {
+      this.showSettingsError('至少需要启用一个镜像站点');
+      return false;
+    }
+
+    // 检查自定义镜像URL格式
+    for (const mirror of config.mirrorRules) {
+      if (mirror.isCustom && mirror.enabled) {
+        if (!mirror.downloadUrl || !mirror.downloadUrl.includes('{owner}') || !mirror.downloadUrl.includes('{repo}')) {
+          this.showSettingsError(`自定义镜像 "${mirror.name}" 的URL格式不正确，必须包含 {owner} 和 {repo} 占位符`);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * 显示设置成功消息
+   */
+  showSettingsSuccess(message) {
+    // 移除已存在的消息
+    const existingMessage = document.querySelector('.success-message');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+
+    // 创建成功消息
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.innerHTML = `
+      <span>✅</span>
+      <span>${message}</span>
+    `;
+
+    // 插入到保存按钮前
+    this.elements.saveSettingsBtn.parentNode.insertBefore(successDiv, this.elements.saveSettingsBtn);
+  }
+
+  /**
+   * 显示设置错误消息
+   */
+  showSettingsError(message) {
+    // 移除已存在的消息
+    const existingMessage = document.querySelector('.error-message');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+
+    // 创建错误消息
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-state';
+    errorDiv.style.marginBottom = '16px';
+    errorDiv.innerHTML = `
+      <div class="error-icon">❌</div>
+      <div>${message}</div>
+    `;
+
+    // 插入到保存按钮前
+    this.elements.saveSettingsBtn.parentNode.insertBefore(errorDiv, this.elements.saveSettingsBtn);
+
+    // 3秒后自动移除
+    setTimeout(() => {
+      if (errorDiv.parentNode) {
+        errorDiv.remove();
+      }
+    }, 3000);
   }
 }
 
-// 显示消息
-function showMessage(message, type = 'success') {
-  const container = document.getElementById('status-message');
-  container.className = `status-message status-${type}`;
-  container.textContent = message;
-  container.style.display = 'block';
-  
-  // 3秒后自动隐藏
-  setTimeout(() => {
-    container.style.display = 'none';
-  }, 3000);
-}
+// 创建全局实例
+let popupManager;
 
-// 使函数全局可用
-window.removeCustomMirror = removeCustomMirror;
+// 确保在DOM加载完成后初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    popupManager = new PopupManager();
+  });
+} else {
+  popupManager = new PopupManager();
+}

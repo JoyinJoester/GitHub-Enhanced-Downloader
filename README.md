@@ -1,7 +1,7 @@
 # 🚀 GitHub Enhanced Downloader
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader)
+[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader)
 [![GitHub stars](https://img.shields.io/github/stars/JoyinJoester/GitHub-Enhanced-Downloader.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/JoyinJoester/GitHub-Enhanced-Downloader.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader/issues)
 
@@ -18,18 +18,7 @@
 - 🎨 **原生UI** - 使用HTML5 `<details>` 元素，完美融入GitHub界面
 - ⚙️ **自定义镜像** - 支持添加自定义镜像规则，满足个性化需求
 - 🌍 **多语言支持** - 支持中文、英文、日语界面
-- 💾 **云端同步** - 设置自动同步到Chrome账户
 
-## 📸 预览截图
-
-### 主界面展示
-![主界面](https://via.placeholder.com/800x500/2188ff/ffffff?text=GitHub+Enhanced+Downloader+Main+Interface)
-
-### 版本分组功能
-![版本分组](https://via.placeholder.com/800x400/28a745/ffffff?text=Version+Grouping+Feature)
-
-### 镜像设置页面
-![镜像设置](https://via.placeholder.com/600x400/17a2b8/ffffff?text=Mirror+Settings+Panel)
 
 ## 🚀 快速开始
 
@@ -123,6 +112,38 @@ github-enhanced-downloader/
 - **镜像转换**: 支持模板字符串和JavaScript表达式两种规则
 - **数据同步**: 基于chrome.storage.sync实现跨设备同步
 
+## 🔧 故障排除
+
+### 镜像下载链接不显示
+
+如果您在下载发行版页面只看到GitHub官方下载按钮，而没有镜像站按钮：
+
+1. **重新加载扩展**
+   - 访问 `chrome://extensions/`
+   - 找到扩展并点击"重新加载"
+
+2. **重置配置**（在GitHub页面Console中运行）：
+   ```javascript
+   chrome.storage.sync.clear(() => {
+     const defaultConfig = {
+       mirrors: [
+         { name: "KKGitHub", enabled: true, urlPattern: "${url}.replace(\"github.com\", \"kkgithub.com\")" },
+         { name: "BGitHub", enabled: true, urlPattern: "${url}.replace(\"github.com\", \"bgithub.xyz\")" },
+         { name: "GitFun", enabled: true, urlPattern: "${url}.replace(\"github.com\", \"github.ur1.fun\")" }
+       ]
+     };
+     chrome.storage.sync.set({ mirrorConfig: defaultConfig }, () => alert('配置重置完成！请刷新页面。'));
+   });
+   ```
+
+3. **刷新页面**并重新测试
+
+详细修复指南请参考：[MIRROR_FIX_GUIDE.md](MIRROR_FIX_GUIDE.md)
+
+### 扩展按钮显示"需要刷新"
+
+这表示扩展已更新，请刷新页面即可恢复正常。
+
 ## 🔧 开发指南
 
 ### 环境要求
@@ -194,6 +215,77 @@ function generateMirrorUrl(originalUrl, rule) {
 - ⚡ 性能优化
 
 ## 📋 更新日志
+
+### [2.2.0] - 2024-12-08
+#### 新增 ⚡
+- 🔥 **智能下载调度器** - 全新的链式回退下载系统，自动选择最佳镜像站
+- 🎯 **智能下载按钮** - 每个文件新增紫色"⚡ 智能下载"按钮，一键启动最优下载
+- 🔄 **链式尝试机制** - 自动按优先级尝试：GitHub → KKGitHub → BGitHub → GitFun
+- 🚨 **实时失效检测** - 智能检测镜像站失效页面，自动跳转到下一个可用镜像
+- 📊 **下载状态通知** - 实时显示下载启动状态和结果反馈
+
+#### 技术特性
+- 🔍 **标签页监控** - 实时监控下载标签页状态，检测失效模式
+- ⏱️ **智能超时** - 5秒成功判定，10秒强制超时，避免无限等待
+- 🧹 **自动清理** - 自动关闭失效标签页，保持浏览器整洁
+- 🛡️ **错误恢复** - 完善的异常处理和状态恢复机制
+
+#### 用户体验
+- 💜 **紫色智能按钮** - 显眼的智能下载入口，与传统链接区分
+- 🎨 **状态指示** - 按钮颜色实时反映下载状态（等待/成功/失败）
+- 📢 **友好通知** - 右上角滑动通知显示详细操作结果
+- 🔄 **无缝体验** - 用户无感知的镜像切换和错误处理
+
+### [2.1.4] - 2024-12-08
+#### 修复 🔧
+- 🔗 **镜像下载链接修复** - 修复下载页面只显示GitHub官方链接的问题
+- 🛠️ **URL生成逻辑优化** - 改进镜像URL生成的模板字符串处理
+- ⚙️ **默认配置更新** - 统一引号格式，提高兼容性
+- 📋 **故障排除指南** - 添加详细的问题修复步骤和配置重置方法
+
+#### 改进
+- 🔍 **调试日志增强** - 增加详细的镜像URL生成日志
+- 📖 **文档完善** - 新增故障排除部分和修复指南
+- 🧪 **测试覆盖** - 添加完整的数据处理流程测试
+- 🛡️ **容错机制** - 改进模板字符串执行失败时的回退逻辑
+
+### [2.1.3] - 2024-12-08
+#### 新增 🎯
+- 🔄 **智能镜像故障转移系统** - 实时检测镜像站失效页面并自动切换
+- 🚨 **多种失效模式检测** - 支持help.kkgithub.com、help子域名、/help路径等失效模式
+- 📊 **优先级故障转移算法** - BGitHub → GitFun → KKGitHub智能切换顺序
+- 🎯 **智能URL重构** - 保留原始GitHub路径，seamless用户体验
+- 📢 **用户友好通知** - 故障转移时显示详细的切换信息
+
+#### 改进
+- 👂 **双重监控机制** - tabs.onUpdated和webNavigation.onBeforeNavigate同时监控
+- 🔍 **详细故障转移日志** - 完整的故障转移过程记录和调试信息
+- ⚡ **性能优化** - 高效的失效页面检测算法
+- 🛡️ **异常处理增强** - 全面的错误捕获和恢复机制
+
+### [2.1.2] - 2025-08-07
+#### 修复
+- 🔧 **自动重定向增强** - 修复GitHub无法访问时不自动跳转镜像站的问题
+- ⏱️ **网络检测优化** - 将超时时间从3秒增加到8秒，提高检测准确性
+- 🎯 **智能镜像选择** - 使用用户配置的首选镜像站进行重定向
+- 📢 **用户体验改进** - 重定向时显示友好的通知提示
+
+#### 改进
+- 👂 **监听器增强** - 添加webNavigation.onBeforeNavigate补充监听
+- 🔍 **日志优化** - 降低扩展上下文监控的日志级别，减少控制台噪音
+- ✅ **状态检查** - 增强HTTP响应状态验证，提高网络检测可靠性
+
+### [2.1.1] - 2025-08-07
+#### 修复
+- 🔧 **镜像URL生成修复** - 修复镜像下载链接显示为JavaScript代码的问题
+- 🛡️ **扩展上下文保护** - 增强扩展重载时的错误处理机制
+- 🔄 **正则回退机制** - 添加JavaScript表达式执行失败时的安全回退
+- 📱 **用户体验改进** - 扩展失效时显示友好的刷新提示
+
+#### 改进
+- ⚡ **URL处理优化** - 增强模板字符串和JavaScript表达式的处理逻辑
+- 🧪 **测试覆盖** - 添加全面的镜像URL生成测试用例
+- 🛠️ **错误处理** - 改进所有Chrome API调用的错误捕获机制
 
 ### [2.1.0] - 2024-08-07
 #### 新增

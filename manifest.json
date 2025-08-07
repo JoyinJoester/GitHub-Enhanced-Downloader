@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.1.0",
+  "version": "2.2.1",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "background": {
@@ -30,6 +30,7 @@
   ],
   "host_permissions": [
     "*://github.com/*",
+    "*://api.github.com/*",
     "*://bgithub.xyz/*",
     "*://kkgithub.com/*",
     "*://github.ur1.fun/*"
