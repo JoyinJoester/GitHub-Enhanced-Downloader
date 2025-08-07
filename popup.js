@@ -32,32 +32,25 @@ const DEFAULT_MIRRORS = [
     description: '原始GitHub下载链接'
   },
   {
-    name: 'GHProxy',
-    rule: 'https://ghproxy.com/${url}',
+    name: 'BGitHub',
+    rule: 'https://bgithub.xyz${url.replace("https://github.com", "")}',
     enabled: false,
     type: 'preset',
-    description: 'GitHub文件加速下载'
+    description: 'BGitHub镜像加速服务'
   },
   {
     name: 'KKGitHub',
-    rule: '${url}.replace("github.com", "kkgithub.com")',
+    rule: 'https://kkgithub.com${url.replace("https://github.com", "")}',
     enabled: false,
     type: 'preset',
-    description: '替换域名为kkgithub.com'
+    description: 'KKGitHub镜像加速服务'
   },
   {
-    name: 'FastGit',
-    rule: '${url}.replace("github.com", "download.fastgit.org")',
+    name: 'GitFun',
+    rule: 'https://github.ur1.fun${url.replace("https://github.com", "")}',
     enabled: false,
     type: 'preset',
-    description: 'FastGit镜像服务'
-  },
-  {
-    name: 'GitHub加速',
-    rule: 'https://gh.api.99988866.xyz/${url}',
-    enabled: false,
-    type: 'preset',
-    description: 'GitHub API加速服务'
+    description: 'GitFun镜像加速服务'
   }
 ];
 
@@ -72,16 +65,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 加载设置
 async function loadSettings() {
   try {
-    const result = await chrome.storage.sync.get(['mirrorSettings']);
+    const result = await chrome.storage.sync.get(['mirrorSettings', 'redirectSettings']);
     const settings = result.mirrorSettings || {
       presetMirrors: DEFAULT_MIRRORS,
       customMirrors: []
     };
     
+    const redirectSettings = result.redirectSettings || {
+      enabled: true,
+      preferredMirror: 'KKGitHub',
+      autoRedirect: true
+    };
+    
     renderPresetMirrors(settings.presetMirrors);
     renderCustomMirrors(settings.customMirrors);
+    renderRedirectSettings(redirectSettings);
     
-    console.log('设置加载完成:', settings);
+    // 加载网络状态
+    await loadNetworkStatus();
+    
+    console.log('设置加载完成:', { settings, redirectSettings });
   } catch (error) {
     console.error('加载设置失败:', error);
     showMessage('加载设置失败: ' + error.message, 'error');
@@ -147,6 +150,71 @@ function renderCustomMirrors(customMirrors) {
     
     container.appendChild(item);
   });
+}
+
+// 渲染重定向设置
+function renderRedirectSettings(redirectSettings) {
+  const autoRedirectCheckbox = document.getElementById('auto-redirect-enabled');
+  const preferredMirrorSelect = document.getElementById('preferred-mirror');
+  
+  autoRedirectCheckbox.checked = redirectSettings.enabled || false;
+  preferredMirrorSelect.value = redirectSettings.preferredMirror || 'KKGitHub';
+  
+  // 绑定事件
+  autoRedirectCheckbox.addEventListener('change', async (e) => {
+    const enabled = e.target.checked;
+    await updateRedirectSettings({ enabled });
+  });
+  
+  preferredMirrorSelect.addEventListener('change', async (e) => {
+    const preferredMirror = e.target.value;
+    await updateRedirectSettings({ preferredMirror });
+  });
+}
+
+// 加载网络状态
+async function loadNetworkStatus() {
+  try {
+    const result = await chrome.storage.local.get(['githubAccessible', 'lastCheckTime']);
+    const statusElement = document.getElementById('network-status');
+    const statusText = document.getElementById('network-status-text');
+    
+    if (result.githubAccessible !== undefined) {
+      const accessible = result.githubAccessible;
+      const lastCheck = result.lastCheckTime ? new Date(result.lastCheckTime).toLocaleTimeString() : '未知';
+      
+      statusElement.style.display = 'block';
+      if (accessible) {
+        statusElement.className = 'status-message status-success';
+        statusText.textContent = `✅ GitHub可正常访问 (最后检测: ${lastCheck})`;
+      } else {
+        statusElement.className = 'status-message status-error';
+        statusText.textContent = `❌ GitHub无法访问，已启用镜像重定向 (最后检测: ${lastCheck})`;
+      }
+    }
+  } catch (error) {
+    console.error('加载网络状态失败:', error);
+  }
+}
+
+// 更新重定向设置
+async function updateRedirectSettings(updates) {
+  try {
+    const result = await chrome.storage.sync.get(['redirectSettings']);
+    const currentSettings = result.redirectSettings || {
+      enabled: true,
+      preferredMirror: 'KKGitHub',
+      autoRedirect: true
+    };
+    
+    const newSettings = { ...currentSettings, ...updates };
+    await chrome.storage.sync.set({ redirectSettings: newSettings });
+    
+    console.log('重定向设置已更新:', newSettings);
+  } catch (error) {
+    console.error('更新重定向设置失败:', error);
+    showMessage('保存设置失败: ' + error.message, 'error');
+  }
 }
 
 // 绑定事件

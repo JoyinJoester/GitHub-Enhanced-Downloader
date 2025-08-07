@@ -216,6 +216,36 @@
     </div>
     
     <div class="content">
+        <!-- 自动重定向设置 -->
+        <div class="section">
+            <div class="section-header">
+                🔄 自动重定向设置
+            </div>
+            <div class="section-content">
+                <div class="mirror-item">
+                    <input type="checkbox" id="auto-redirect-enabled" class="mirror-checkbox">
+                    <span class="mirror-name">启用自动重定向</span>
+                    <span class="mirror-url">当GitHub无法访问时自动跳转到镜像站</span>
+                </div>
+                
+                <div class="form-group" style="margin-top: 12px;">
+                    <label class="form-label" for="preferred-mirror">首选镜像站</label>
+                    <select id="preferred-mirror" class="form-input">
+                        <option value="KKGitHub">KKGitHub (kkgithub.com)</option>
+                        <option value="BGitHub">BGitHub (bgithub.xyz)</option>
+                        <option value="GitFun">GitFun (github.ur1.fun)</option>
+                    </select>
+                    <div class="help-text">
+                        选择当GitHub无法访问时优先使用的镜像站点
+                    </div>
+                </div>
+                
+                <div id="network-status" class="status-message" style="display: none;">
+                    <span id="network-status-text"></span>
+                </div>
+            </div>
+        </div>
+        
         <!-- 预设镜像 -->
         <div class="section">
             <div class="section-header">

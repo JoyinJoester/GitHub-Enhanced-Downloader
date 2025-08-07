@@ -1,15 +1,21 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
-      "matches": ["https://github.com/*/*"],
+      "matches": [
+        "https://github.com/*/*",
+        "https://bgithub.xyz/*/*",
+        "https://kkgithub.com/*/*",
+        "https://github.ur1.fun/*/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_end"
     }
@@ -17,10 +23,16 @@
   "permissions": [
     "scripting",
     "activeTab",
-    "storage"
+    "storage",
+    "tabs",
+    "alarms",
+    "webNavigation"
   ],
   "host_permissions": [
-    "https://github.com/*"
+    "*://github.com/*",
+    "*://bgithub.xyz/*",
+    "*://kkgithub.com/*",
+    "*://github.ur1.fun/*"
   ],
   "action": {
     "default_popup": "popup.html",

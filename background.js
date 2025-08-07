@@ -1,25 +1,148 @@
 // GitHub Enhanced Downloader - Background Script
 
+// 1. 常量与状态定义
+const PRIMARY_HOST = "github.com";
+const MIRROR_HOST = "kkgithub.com";
+const GITHUB_STATUS_KEY = "github_network_status";
+
+// 2. 网络状态检测函数
+async function checkGithubStatus() {
+  try {
+    // 使用 AbortController 实现超时控制
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
+    
+    // 尝试访问 GitHub favicon 来检测网络状态
+    const response = await fetch('https://github.com/favicon.ico', {
+      method: 'HEAD',
+      signal: controller.signal,
+      cache: 'no-cache'
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // 保存成功状态到本地存储
+    await chrome.storage.local.set({
+      [GITHUB_STATUS_KEY]: {
+        accessible: true,
+        checkedAt: Date.now()
+      }
+    });
+    
+    console.log('GitHub Enhanced Downloader: GitHub网络检测成功 ✅');
+    return true;
+    
+  } catch (error) {
+    // 保存失败状态到本地存储
+    await chrome.storage.local.set({
+      [GITHUB_STATUS_KEY]: {
+        accessible: false,
+        checkedAt: Date.now()
+      }
+    });
+    
+    console.log('GitHub Enhanced Downloader: GitHub网络检测失败 ❌', error.message);
+    return false;
+  }
+}
+
+// 3. 重定向监听器
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  // 检查标签页状态和URL
+  if (changeInfo.status !== 'loading' || !tab.url) {
+    return;
+  }
+  
+  try {
+    const url = new URL(tab.url);
+    
+    // 检查是否是GitHub主站URL（排除API和其他子域名）
+    if (url.hostname === PRIMARY_HOST) {
+      // 从本地存储获取网络状态
+      const result = await chrome.storage.local.get([GITHUB_STATUS_KEY]);
+      const networkStatus = result[GITHUB_STATUS_KEY];
+      
+      // 如果GitHub不可访问，执行重定向
+      if (networkStatus && networkStatus.accessible === false) {
+        // 构建镜像URL
+        const newUrl = tab.url.replace(`https://${PRIMARY_HOST}`, `https://${MIRROR_HOST}`);
+        
+        console.log('GitHub Enhanced Downloader: 执行自动重定向', {
+          original: tab.url,
+          redirect: newUrl,
+          reason: 'GitHub不可访问'
+        });
+        
+        // 更新标签页地址
+        await chrome.tabs.update(tabId, { url: newUrl });
+      }
+    }
+  } catch (error) {
+    console.error('GitHub Enhanced Downloader: 重定向过程出错', error);
+  }
+});
+
+// 4. 插件生命周期事件监听
+chrome.runtime.onInstalled.addListener(async (details) => {
+  console.log('GitHub Enhanced Downloader: 插件已安装/更新');
+  
+  // 立即执行一次网络检测
+  await checkGithubStatus();
+  
+  // 创建定时检测任务
+  chrome.alarms.create('githubStatusAlarm', {
+    delayInMinutes: 5,
+    periodInMinutes: 5
+  });
+  
+  // 初始化发行版下载功能的镜像配置
+  await initializeMirrors();
+  
+  // 如果是首次安装，设置默认配置
+  if (details.reason === 'install') {
+    await setDefaultConfigurations();
+  }
+});
+
+chrome.runtime.onStartup.addListener(async () => {
+  console.log('GitHub Enhanced Downloader: 浏览器启动');
+  
+  // 立即执行一次网络检测
+  await checkGithubStatus();
+  
+  // 创建定时检测任务
+  chrome.alarms.create('githubStatusAlarm', {
+    delayInMinutes: 5,
+    periodInMinutes: 5
+  });
+  
+  // 初始化镜像配置
+  await initializeMirrors();
+});
+
+// 5. 定时任务监听器
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'githubStatusAlarm') {
+    await checkGithubStatus();
+  }
+});
+
+// ==================== 发行版下载数据处理功能 ====================
 // 默认镜像配置
 const DEFAULT_MIRRORS = [
   {
-    name: 'GHProxy',
-    rule: 'https://ghproxy.com/${url}',
+    name: 'BGitHub',
+    rule: 'https://bgithub.xyz${url.replace("https://github.com", "")}',
     enabled: false
   },
   {
     name: 'KKGitHub', 
-    rule: '${url}.replace("github.com", "kkgithub.com")',
+    rule: 'https://kkgithub.com${url.replace("https://github.com", "")}',
     enabled: false
   },
   {
-    name: 'FastGit',
-    rule: '${url}.replace("github.com", "download.fastgit.org")',
-    enabled: false
-  },
-  {
-    name: 'GitHub加速',
-    rule: 'https://gh.api.99988866.xyz/${url}',
+    name: 'GitFun',
+    rule: 'https://github.ur1.fun${url.replace("https://github.com", "")}',
     enabled: false
   }
 ];
@@ -52,6 +175,56 @@ async function initializeMirrors() {
   }
 }
 
+// 设置默认配置
+async function setDefaultConfigurations() {
+  // 设置默认镜像配置
+  const defaultSettings = {
+    presetMirrors: [
+      {
+        name: 'GitHub官方',
+        rule: '${url}',
+        enabled: true,
+        type: 'preset',
+        description: '原始GitHub下载链接'
+      },
+      {
+        name: 'BGitHub',
+        rule: 'https://bgithub.xyz${url.replace("https://github.com", "")}',
+        enabled: false,
+        type: 'preset',
+        description: 'BGitHub镜像加速服务'
+      },
+      {
+        name: 'KKGitHub',
+        rule: 'https://kkgithub.com${url.replace("https://github.com", "")}',
+        enabled: false,
+        type: 'preset',
+        description: 'KKGitHub镜像加速服务'
+      },
+      {
+        name: 'GitFun',
+        rule: 'https://github.ur1.fun${url.replace("https://github.com", "")}',
+        enabled: false,
+        type: 'preset',
+        description: 'GitFun镜像加速服务'
+      }
+    ],
+    customMirrors: []
+  };
+  
+  // 设置默认重定向配置
+  const defaultRedirectSettings = {
+    enabled: true,
+    preferredMirror: 'KKGitHub',
+    autoRedirect: true
+  };
+  
+  await chrome.storage.sync.set({ 
+    mirrorSettings: defaultSettings,
+    redirectSettings: defaultRedirectSettings
+  });
+}
+
 // 生成镜像URL
 function generateMirrorUrl(originalUrl, rule) {
   try {
@@ -74,7 +247,7 @@ function generateMirrorUrl(originalUrl, rule) {
   }
 }
 
-// 2. 监听来自content script的消息
+// 6. 保留原有的消息监听器 - 处理FETCH_RELEASES消息
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('GitHub Enhanced Downloader: 收到消息', message);
   
@@ -85,7 +258,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   
-  // 3. 处理FETCH_RELEASES请求
+  // 处理FETCH_RELEASES请求
   if (message.type === 'FETCH_RELEASES') {
     handleFetchReleases(message, sendResponse);
     return true; // 保持消息通道开放以支持异步响应
@@ -300,68 +473,6 @@ function formatFileSize(bytes) {
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
-
-// 插件安装或启动时的初始化
-chrome.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === 'install') {
-    console.log('GitHub Enhanced Downloader: 插件已安装');
-    
-    // 首次安装时设置默认镜像配置
-    const defaultSettings = {
-      presetMirrors: [
-        {
-          name: 'GitHub官方',
-          rule: '${url}',
-          enabled: true,
-          type: 'preset',
-          description: '原始GitHub下载链接'
-        },
-        {
-          name: 'GHProxy',
-          rule: 'https://ghproxy.com/${url}',
-          enabled: false,
-          type: 'preset',
-          description: 'GitHub文件加速下载'
-        },
-        {
-          name: 'KKGitHub',
-          rule: '${url}.replace("github.com", "kkgithub.com")',
-          enabled: false,
-          type: 'preset',
-          description: '替换域名为kkgithub.com'
-        },
-        {
-          name: 'FastGit',
-          rule: '${url}.replace("github.com", "download.fastgit.org")',
-          enabled: false,
-          type: 'preset',
-          description: 'FastGit镜像服务'
-        },
-        {
-          name: 'GitHub加速',
-          rule: 'https://gh.api.99988866.xyz/${url}',
-          enabled: false,
-          type: 'preset',
-          description: 'GitHub API加速服务'
-        }
-      ],
-      customMirrors: []
-    };
-    
-    await chrome.storage.sync.set({ mirrorSettings: defaultSettings });
-  } else if (details.reason === 'update') {
-    console.log('GitHub Enhanced Downloader: 插件已更新到版本', chrome.runtime.getManifest().version);
-  }
-  
-  // 初始化镜像配置
-  await initializeMirrors();
-});
-
-// 监听扩展启动
-chrome.runtime.onStartup.addListener(async () => {
-  console.log('GitHub Enhanced Downloader: 扩展已启动');
-  await initializeMirrors();
-});
 
 // 启动时初始化
 initializeMirrors();

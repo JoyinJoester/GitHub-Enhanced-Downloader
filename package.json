@@ -1,6 +1,6 @@
 {
   "name": "github-enhanced-downloader",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "一个强大的Chrome扩展，为GitHub仓库页面添加快速下载按钮，支持镜像加速和智能版本分组",
   "repository": {
     "type": "git",
