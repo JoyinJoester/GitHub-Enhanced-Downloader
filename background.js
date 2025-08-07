@@ -151,7 +151,7 @@ function getDefaultMirrorConfig() {
       }
     ],
     autoRedirect: {
-      enabled: true,
+      enabled: false,  // 默认禁用自动重定向，让用户主动选择
       preferredMirror: "KKGitHub",
       checkInterval: 300000
     }
@@ -167,7 +167,7 @@ function convertOldConfigToNew(oldConfig) {
   const newConfig = {
     mirrors: [],
     autoRedirect: {
-      enabled: true,
+      enabled: false,  // 转换旧配置时也默认禁用自动重定向
       preferredMirror: "KKGitHub",
       checkInterval: 300000
     }
@@ -1328,7 +1328,7 @@ async function setDefaultConfigurations() {
 
 // ==================== 初始化 ====================
 
-console.log('GitHub Enhanced Downloader v2.2.1: 后台脚本已加载 (智能网络检测升级版本)');
+console.log('GitHub Enhanced Downloader v2.2.2: 后台脚本已加载 (修复自动重定向默认配置)');
 
 // 初始化检查
 (async () => {
