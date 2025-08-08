@@ -1,7 +1,7 @@
 # 🚀 GitHub Enhanced Downloader
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader)
+[![Version](https://img.shields.io/badge/version-2.3.0-green.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader)
 [![GitHub stars](https://img.shields.io/github/stars/JoyinJoester/GitHub-Enhanced-Downloader.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/JoyinJoester/GitHub-Enhanced-Downloader.svg)](https://github.com/JoyinJoester/GitHub-Enhanced-Downloader/issues)
 

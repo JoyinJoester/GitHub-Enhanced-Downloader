@@ -1328,7 +1328,7 @@ async function setDefaultConfigurations() {
 
 // ==================== 初始化 ====================
 
-console.log('GitHub Enhanced Downloader v2.2.2: 后台脚本已加载 (修复自动重定向默认配置)');
+console.log('GitHub Enhanced Downloader v2.3.0: 后台脚本已加载 (UI回滚到多镜像链接显示)');
 
 // 初始化检查
 (async () => {

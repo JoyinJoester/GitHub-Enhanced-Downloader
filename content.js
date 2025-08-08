@@ -666,14 +666,14 @@ function createReleaseElementForGroup(release, index) {
   return releaseDiv;
 }
 
-// 创建单个资源文件元素
+// 创建单个资源文件元素（显示所有镜像链接）
 function createAssetElement(asset) {
   const assetDiv = document.createElement('div');
   assetDiv.style.cssText = `
     border: 1px solid #e1e4e8;
-    border-radius: 4px;
-    padding: 12px;
-    margin-bottom: 8px;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
     background-color: white;
   `;
 
@@ -692,335 +692,126 @@ function createAssetElement(asset) {
     </div>
   `;
 
-  // 创建智能下载按钮
-  const downloadBtn = createIntelligentDownloadButton(asset);
-  
+  // 创建下载链接容器
+  const downloadLinksDiv = document.createElement('div');
+  downloadLinksDiv.style.cssText = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  `;
+
+  // 检查是否有download_links
+  if (asset.download_links && Array.isArray(asset.download_links) && asset.download_links.length > 0) {
+    // 显示所有镜像链接
+    asset.download_links.forEach(link => {
+      const linkElement = createDownloadLinkElement(link);
+      downloadLinksDiv.appendChild(linkElement);
+    });
+  } else if (asset.browser_download_url) {
+    // 如果没有download_links但有browser_download_url，创建GitHub官方链接
+    const officialLink = {
+      name: 'GitHub',
+      url: asset.browser_download_url,
+      type: 'official'
+    };
+    const linkElement = createDownloadLinkElement(officialLink);
+    downloadLinksDiv.appendChild(linkElement);
+  } else {
+    // 没有可用的下载链接
+    const noLinkDiv = document.createElement('div');
+    noLinkDiv.style.cssText = `
+      color: #656d76;
+      font-size: 12px;
+      font-style: italic;
+    `;
+    noLinkDiv.textContent = '暂无可用的下载链接';
+    downloadLinksDiv.appendChild(noLinkDiv);
+  }
+
   assetDiv.appendChild(fileInfoDiv);
-  assetDiv.appendChild(downloadBtn);
+  assetDiv.appendChild(downloadLinksDiv);
   
   return assetDiv;
 }
 
-// 创建智能下载按钮
-function createIntelligentDownloadButton(asset) {
-  const button = document.createElement('button');
-  button.style.cssText = `
+// 创建下载链接元素
+function createDownloadLinkElement(link) {
+  const linkElement = document.createElement('a');
+  linkElement.href = link.url;
+  linkElement.target = '_blank';
+  linkElement.rel = 'noopener noreferrer';
+  
+  // 根据链接类型设置样式
+  const isOfficial = link.type === 'official';
+  const baseStyle = `
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 10px 16px;
-    background-color: #0969da;
-    color: white;
-    border: none;
+    padding: 6px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
-    cursor: pointer;
+    text-decoration: none;
     transition: all 0.2s ease;
-    position: relative;
-    min-height: 36px;
+    min-width: 80px;
+    justify-content: center;
   `;
   
-  button.innerHTML = `
-    <svg style="width: 16px; height: 16px; margin-right: 8px;" fill="currentColor" viewBox="0 0 16 16">
-      <path d="M7.47 10.78a.75.75 0 001.06 0l3.75-3.75a.75.75 0 00-1.06-1.06L8.75 8.44V1.75a.75.75 0 00-1.5 0v6.69L4.78 5.97a.75.75 0 00-1.06 1.06l3.75 3.75z"></path>
-      <path d="M3.75 13a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5z"></path>
-    </svg>
-    智能下载
-  `;
-  
-  button.title = '使用智能调度器自动选择最佳镜像下载';
-
-  // 添加悬停效果
-  button.addEventListener('mouseenter', () => {
-    if (!button.disabled) {
-      button.style.backgroundColor = '#0860ca';
-      button.style.transform = 'translateY(-1px)';
-      button.style.boxShadow = '0 4px 8px rgba(9, 105, 218, 0.3)';
-    }
-  });
-
-  button.addEventListener('mouseleave', () => {
-    if (!button.disabled) {
-      button.style.backgroundColor = '#0969da';
-      button.style.transform = 'translateY(0)';
-      button.style.boxShadow = 'none';
-    }
-  });
-
-  // 绑定点击事件 - 启动智能下载
-  button.addEventListener('click', async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    await handleIntelligentDownload(asset, button);
-  });
-
-  return button;
-}
-
-// 处理智能下载
-async function handleIntelligentDownload(asset, button) {
-  const originalText = button.innerHTML;
-  const originalBg = button.style.backgroundColor;
-  
-  try {
-    // 显示加载状态
-    button.innerHTML = `
-      <svg style="width: 16px; height: 16px; margin-right: 8px; animation: spin 1s linear infinite;" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-      </svg>
-      处理中...
+  if (isOfficial) {
+    linkElement.style.cssText = baseStyle + `
+      background-color: #2da44e;
+      color: white;
+      border: 1px solid #2da44e;
     `;
-    button.style.backgroundColor = '#6c757d';
-    button.disabled = true;
-    button.style.cursor = 'not-allowed';
-
-    // 添加旋转动画
-    if (!document.getElementById('spin-animation')) {
-      const style = document.createElement('style');
-      style.id = 'spin-animation';
-      style.textContent = `
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    // 检查扩展上下文
-    if (!checkExtensionContext()) {
-      button.innerHTML = `
-        <svg style="width: 16px; height: 16px; margin-right: 8px;" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z"/>
-          <path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z"/>
-        </svg>
-        需要刷新
-      `;
-      button.style.backgroundColor = '#dc3545';
-      showIntelligentDownloadNotification('扩展已更新，请刷新页面后重试', 'error');
-      return;
-    }
-
-    // 获取原始下载URL
-    const originalUrl = getOriginalDownloadUrl(asset);
-    if (!originalUrl) {
-      throw new Error('未找到有效的下载链接');
-    }
-
-    console.log('GitHub Enhanced Downloader: 启动智能下载:', originalUrl);
-
-    // 调用后台的智能下载调度器
-    const response = await new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('智能下载请求超时'));
-      }, 15000);
-
-      chrome.runtime.sendMessage({
-        type: 'INITIATE_DOWNLOAD',
-        originalUrl: originalUrl
-      }, (response) => {
-        clearTimeout(timeoutId);
-
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-
-        if (!response) {
-          reject(new Error('后台脚本无响应'));
-          return;
-        }
-
-        resolve(response);
-      });
+    linkElement.innerHTML = `
+      <svg style="width: 14px; height: 14px; margin-right: 6px;" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      ${link.name}
+    `;
+    
+    // 官方链接悬停效果
+    linkElement.addEventListener('mouseenter', () => {
+      linkElement.style.backgroundColor = '#2c974b';
+      linkElement.style.transform = 'translateY(-1px)';
+      linkElement.style.boxShadow = '0 2px 4px rgba(45, 164, 78, 0.3)';
     });
-
-    // 处理响应
-    if (response.success) {
-      if (response.downloadInitiated) {
-        button.innerHTML = `
-          <svg style="width: 16px; height: 16px; margin-right: 8px;" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
-          </svg>
-          下载已启动
-        `;
-        button.style.backgroundColor = '#28a745';
-        showIntelligentDownloadNotification('智能下载已启动，正在使用最佳镜像站', 'success');
-        
-        // 3秒后恢复按钮
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.style.backgroundColor = originalBg;
-          button.disabled = false;
-          button.style.cursor = 'pointer';
-        }, 3000);
-      } else {
-        button.innerHTML = `
-          <svg style="width: 16px; height: 16px; margin-right: 8px;" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
-          </svg>
-          下载失败
-        `;
-        button.style.backgroundColor = '#dc3545';
-        showIntelligentDownloadNotification('所有镜像站点均不可用，请稍后重试', 'warning');
-        
-        // 5秒后恢复按钮
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.style.backgroundColor = originalBg;
-          button.disabled = false;
-          button.style.cursor = 'pointer';
-        }, 5000);
-      }
-    } else {
-      throw new Error(response.error || '智能下载失败');
-    }
-
-  } catch (error) {
-    console.error('GitHub Enhanced Downloader: 智能下载失败:', error);
     
-    button.innerHTML = `
-      <svg style="width: 16px; height: 16px; margin-right: 8px;" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+    linkElement.addEventListener('mouseleave', () => {
+      linkElement.style.backgroundColor = '#2da44e';
+      linkElement.style.transform = 'translateY(0)';
+      linkElement.style.boxShadow = 'none';
+    });
+  } else {
+    // 镜像站链接
+    linkElement.style.cssText = baseStyle + `
+      background-color: #0969da;
+      color: white;
+      border: 1px solid #0969da;
+    `;
+    linkElement.innerHTML = `
+      <svg style="width: 14px; height: 14px; margin-right: 6px;" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M7.47 10.78a.75.75 0 001.06 0l3.75-3.75a.75.75 0 00-1.06-1.06L8.75 8.44V1.75a.75.75 0 00-1.5 0v6.69L4.78 5.97a.75.75 0 00-1.06 1.06l3.75 3.75z"/>
+        <path d="M3.75 13a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5z"/>
       </svg>
-      错误
+      ${link.name}
     `;
-    button.style.backgroundColor = '#dc3545';
-    showIntelligentDownloadNotification(`智能下载失败: ${error.message}`, 'error');
     
-    // 5秒后恢复按钮
-    setTimeout(() => {
-      button.innerHTML = originalText;
-      button.style.backgroundColor = originalBg;
-      button.disabled = false;
-      button.style.cursor = 'pointer';
-    }, 5000);
-  }
-}
-
-// 获取原始下载URL
-function getOriginalDownloadUrl(asset) {
-  // 优先使用 browser_download_url
-  if (asset.browser_download_url) {
-    return asset.browser_download_url;
-  }
-  
-  // 如果没有，尝试从 download_links 中获取官方链接
-  if (asset.download_links && Array.isArray(asset.download_links)) {
-    const officialLink = asset.download_links.find(link => link.type === 'official');
-    if (officialLink) {
-      return officialLink.url;
-    }
+    // 镜像链接悬停效果
+    linkElement.addEventListener('mouseenter', () => {
+      linkElement.style.backgroundColor = '#0860ca';
+      linkElement.style.transform = 'translateY(-1px)';
+      linkElement.style.boxShadow = '0 2px 4px rgba(9, 105, 218, 0.3)';
+    });
     
-    // 如果没有官方链接，使用第一个链接
-    if (asset.download_links.length > 0) {
-      return asset.download_links[0].url;
-    }
-  }
-  
-  // 如果都没有，返回 null
-  return null;
-}
-
-// 显示智能下载通知
-function showIntelligentDownloadNotification(message, type = 'info') {
-  // 移除已存在的通知
-  const existingNotification = document.getElementById('intelligent-download-notification');
-  if (existingNotification) {
-    existingNotification.remove();
+    linkElement.addEventListener('mouseleave', () => {
+      linkElement.style.backgroundColor = '#0969da';
+      linkElement.style.transform = 'translateY(0)';
+      linkElement.style.boxShadow = 'none';
+    });
   }
 
-  // 创建通知元素
-  const notification = document.createElement('div');
-  notification.id = 'intelligent-download-notification';
-  
-  const bgColors = {
-    success: '#d4edda',
-    warning: '#fff3cd',
-    error: '#f8d7da',
-    info: '#d1ecf1'
-  };
-  
-  const borderColors = {
-    success: '#c3e6cb',
-    warning: '#faeaa3',
-    error: '#f5c6cb',
-    info: '#bee5eb'
-  };
-  
-  const textColors = {
-    success: '#155724',
-    warning: '#856404',
-    error: '#721c24',
-    info: '#0c5460'
-  };
-
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    background-color: ${bgColors[type] || bgColors.info};
-    color: ${textColors[type] || textColors.info};
-    border: 1px solid ${borderColors[type] || borderColors.info};
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10001;
-    max-width: 350px;
-    font-size: 14px;
-    line-height: 1.4;
-    animation: slideInRight 0.3s ease;
-  `;
-
-  const icons = {
-    success: '✅',
-    warning: '⚠️',
-    error: '❌',
-    info: 'ℹ️'
-  };
-
-  notification.innerHTML = `
-    <div style="display: flex; align-items: flex-start;">
-      <span style="margin-right: 10px; margin-top: 1px; flex-shrink: 0;">
-        ${icons[type] || icons.info}
-      </span>
-      <span style="flex: 1;">${message}</span>
-    </div>
-  `;
-
-  // 添加动画样式
-  if (!document.getElementById('intelligent-download-animations')) {
-    const style = document.createElement('style');
-    style.id = 'intelligent-download-animations';
-    style.textContent = `
-      @keyframes slideInRight {
-        from { opacity: 0; transform: translateX(100%); }
-        to { opacity: 1; transform: translateX(0); }
-      }
-      @keyframes slideOutRight {
-        from { opacity: 1; transform: translateX(0); }
-        to { opacity: 0; transform: translateX(100%); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  document.body.appendChild(notification);
-
-  // 自动移除通知
-  setTimeout(() => {
-    if (notification && notification.parentNode) {
-      notification.style.animation = 'slideOutRight 0.3s ease';
-      setTimeout(() => {
-        if (notification && notification.parentNode) {
-          notification.remove();
-        }
-      }, 300);
-    }
-  }, 5000);
+  return linkElement;
 }
 
 // 设置模态框关闭事件
